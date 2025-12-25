@@ -508,7 +508,7 @@
             renderer.render(scene, camera);
         }
 
-        function startSystem() {
+    function startSystem() {
     // Chạy nhạc (Lưu ý: Một số trình duyệt chặn tự động phát nhạc nếu chưa tương tác)
     bgMusic.play().catch(e => console.log("Trình duyệt chặn tự động phát nhạc:", e));
     
@@ -520,9 +520,16 @@
     let currentIndex = 0;
 
     function updateAutoState() {
-        state = states[currentIndex];
-        currentIndex = (currentIndex + 1) % states.length;
+    const oldState = state; // Lưu trạng thái cũ
+    state = states[currentIndex];
+    
+    // Nếu chuyển sang trạng thái PHOTO, đổi sang ảnh tiếp theo
+    if (state === 'PHOTO' && oldState !== 'PHOTO') {
+        selectedIndex = (selectedIndex + 1) % photoMeshes.length;
     }
+    
+    currentIndex = (currentIndex + 1) % states.length;
+}
 
     // Chạy ngay lần đầu và thiết lập vòng lặp
     updateAutoState();
