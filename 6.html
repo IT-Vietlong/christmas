@@ -200,6 +200,7 @@
         let selectedIndex = 0;
         let handX = 0.5;
         let heartRotation = 0;
+        let photoRotation = 0;
 
         
         // ==========================================
@@ -466,20 +467,22 @@
 
             } else if (state === 'EXPLODE') {
                 titleMesh.visible = false; starMesh.visible = false;
-                const baseAngle = groupGold.rotation.y;
+                
+                // Cập nhật góc quay liên tục cho vòng tròn ảnh
+                photoRotation += 0.005; 
+                
                 const angleStep = (Math.PI * 2) / photoMeshes.length;
 
                 photoMeshes.forEach((mesh, i) => {
                     mesh.visible = true;
-                    const angle = baseAngle + i * angleStep;
+                    // Sử dụng photoRotation thay vì groupGold.rotation.y
+                    const angle = photoRotation + i * angleStep; 
                     const x = Math.sin(angle) * CONFIG.photoOrbitRadius;
                     const z = Math.cos(angle) * CONFIG.photoOrbitRadius;
                     const y = Math.sin(time + i) * 3;
 
                     mesh.position.lerp(new THREE.Vector3(x, y, z), 0.1);
                     mesh.lookAt(camera.position);
-                    
-                    // Giảm kích thước ảnh khi đang xoay vòng
                     mesh.scale.lerp(new THREE.Vector3(0.8, 0.8, 0.8), 0.1);
                 });
 
@@ -512,16 +515,29 @@
     let currentIndex = 0;
 
     setInterval(() => {
-        // Chuyển trạng thái: Tree -> Explode -> Photo -> Heart
+        const oldState = state;
         state = states[currentIndex];
 
-        // LOGIC QUAN TRỌNG: Nếu trạng thái là PHOTO, tự động nhảy sang ảnh tiếp theo
+        // Nếu chuẩn bị chuyển sang PHOTO, tính toán xem ảnh nào đang ở gần nhất
         if (state === 'PHOTO') {
-            selectedIndex = (selectedIndex + 1) % photoTextures.length;
+            let maxZ = -999;
+            let closestIdx = 0;
+            
+            const angleStep = (Math.PI * 2) / photoMeshes.length;
+            photoMeshes.forEach((mesh, i) => {
+                // Tính toán góc hiện tại của từng ảnh dựa trên photoRotation
+                const angle = photoRotation + i * angleStep;
+                const z = Math.cos(angle); 
+                if (z > maxZ) {
+                    maxZ = z;
+                    closestIdx = i;
+                }
+            });
+            selectedIndex = closestIdx; // Chọn ảnh đang ở phía trước mặt nhất
         }
 
         currentIndex = (currentIndex + 1) % states.length;
-    }, 5000); // 5 giây đổi trạng thái 1 lần
+    }, 5000);
 }
 
 // 2. Lệnh quan trọng nhất: Tự động gọi hàm khi mở trang
