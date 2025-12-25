@@ -466,10 +466,8 @@
 
             } else if (state === 'EXPLODE') {
                 titleMesh.visible = false; starMesh.visible = false;
-
                 const baseAngle = groupGold.rotation.y;
-                const angleStep = (Math.PI * 2) / 5;
-                let bestIdx = 0; let maxZ = -999;
+                const angleStep = (Math.PI * 2) / photoMeshes.length;
 
                 photoMeshes.forEach((mesh, i) => {
                     mesh.visible = true;
@@ -480,26 +478,22 @@
 
                     mesh.position.lerp(new THREE.Vector3(x, y, z), 0.1);
                     mesh.lookAt(camera.position);
-
-                    if (z > maxZ) { maxZ = z; bestIdx = i; }
-
-                    if (z > 5) {
-                        const distScale = 1.0 + (z / CONFIG.photoOrbitRadius) * 0.8;
-                        mesh.scale.lerp(new THREE.Vector3(distScale, distScale, distScale), 0.1);
-                    } else {
-                        mesh.scale.lerp(new THREE.Vector3(0.6, 0.6, 0.6), 0.1);
-                    }
+                    
+                    // Giảm kích thước ảnh khi đang xoay vòng
+                    mesh.scale.lerp(new THREE.Vector3(0.8, 0.8, 0.8), 0.1);
                 });
-                selectedIndex = bestIdx;
 
             } else if (state === 'PHOTO') {
                 photoMeshes.forEach((mesh, i) => {
                     if (i === selectedIndex) {
+                        mesh.visible = true;
+                        // Phóng to ảnh được chọn ra giữa màn hình
                         mesh.position.lerp(new THREE.Vector3(0, 0, 60), 0.1);
                         mesh.scale.lerp(new THREE.Vector3(5, 5, 5), 0.1);
                         mesh.lookAt(camera.position);
-                        mesh.rotation.z = 0;
                     } else {
+                        // Ẩn các ảnh không được chọn
+                        mesh.visible = false;
                         mesh.scale.lerp(new THREE.Vector3(0, 0, 0), 0.1);
                     }
                 });
@@ -509,36 +503,25 @@
         }
 
     function startSystem() {
-    // Chạy nhạc (Lưu ý: Một số trình duyệt chặn tự động phát nhạc nếu chưa tương tác)
-    bgMusic.play().catch(e => console.log("Trình duyệt chặn tự động phát nhạc:", e));
+    // Chạy nhạc
+    bgMusic.play().catch(e => console.log("Trình duyệt chặn nhạc"));
     
-    // Khởi tạo 3D
     init3D();
 
-    // Cấu hình chuyển trạng thái tự động mỗi 5 giây
     const states = ['TREE', 'EXPLODE', 'PHOTO', 'HEART'];
     let currentIndex = 0;
 
-    function updateAutoState() {
-    const oldState = state;
-    state = states[currentIndex];
-    
-    // Nếu VỪA CHUYỂN từ EXPLODE sang PHOTO, giữ nguyên selectedIndex từ EXPLODE
-    // Nếu KHÔNG PHẢI từ EXPLODE sang PHOTO, tự động chuyển ảnh tiếp theo
-    if (state === 'PHOTO') {
-        if (oldState !== 'EXPLODE') {
-            // Chuyển sang ảnh tiếp theo nếu không phải từ EXPLODE
-            selectedIndex = (selectedIndex + 1) % photoMeshes.length;
-        }
-        // Nếu từ EXPLODE sang PHOTO thì giữ nguyên selectedIndex đã chọn
-    }
-    
-    currentIndex = (currentIndex + 1) % states.length;
-}
+    setInterval(() => {
+        // Chuyển trạng thái: Tree -> Explode -> Photo -> Heart
+        state = states[currentIndex];
 
-    // Chạy ngay lần đầu và thiết lập vòng lặp
-    updateAutoState();
-    setInterval(updateAutoState, 5000);
+        // LOGIC QUAN TRỌNG: Nếu trạng thái là PHOTO, tự động nhảy sang ảnh tiếp theo
+        if (state === 'PHOTO') {
+            selectedIndex = (selectedIndex + 1) % photoTextures.length;
+        }
+
+        currentIndex = (currentIndex + 1) % states.length;
+    }, 5000); // 5 giây đổi trạng thái 1 lần
 }
 
 // 2. Lệnh quan trọng nhất: Tự động gọi hàm khi mở trang
