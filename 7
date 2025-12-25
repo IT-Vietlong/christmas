@@ -1,0 +1,48 @@
+function startSystem() {
+    const overlay = document.getElementById('overlay');
+    const startBtn = document.getElementById('start-btn');
+
+    startBtn.addEventListener('click', () => {
+        // 1. Ẩn lớp phủ
+        overlay.style.display = 'none';
+
+        // 2. Phát nhạc (Bắt buộc phải nằm trong sự kiện click)
+        bgMusic.play().then(() => {
+            console.log("Nhạc đang phát...");
+        }).catch(e => {
+            console.log("Lỗi phát nhạc:", e);
+        });
+
+        // 3. Khởi tạo 3D
+        init3D();
+
+        // 4. Chạy vòng lặp trạng thái
+        const states = ['TREE', 'EXPLODE', 'PHOTO', 'HEART'];
+        let currentIndex = 0;
+
+        setInterval(() => {
+            state = states[currentIndex];
+
+            if (state === 'PHOTO') {
+                let maxZ = -999;
+                let closestIdx = 0;
+                const angleStep = (Math.PI * 2) / photoMeshes.length;
+                photoMeshes.forEach((mesh, i) => {
+                    const angle = photoRotation + i * angleStep;
+                    const z = Math.cos(angle); 
+                    if (z > maxZ) {
+                        maxZ = z;
+                        closestIdx = i;
+                    }
+                });
+                selectedIndex = closestIdx;
+            }
+
+            currentIndex = (currentIndex + 1) % states.length;
+        }, 5000);
+    });
+}
+
+// Xóa dòng window.onload = startSystem; cũ
+// Thay bằng gọi trực tiếp startSystem để đợi click:
+startSystem();
