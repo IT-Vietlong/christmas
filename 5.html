@@ -520,12 +520,17 @@
     let currentIndex = 0;
 
     function updateAutoState() {
-    const oldState = state; // Lưu trạng thái cũ
+    const oldState = state;
     state = states[currentIndex];
     
-    // Nếu chuyển sang trạng thái PHOTO, đổi sang ảnh tiếp theo
-    if (state === 'PHOTO' && oldState !== 'PHOTO') {
-        selectedIndex = (selectedIndex + 1) % photoMeshes.length;
+    // Nếu VỪA CHUYỂN từ EXPLODE sang PHOTO, giữ nguyên selectedIndex từ EXPLODE
+    // Nếu KHÔNG PHẢI từ EXPLODE sang PHOTO, tự động chuyển ảnh tiếp theo
+    if (state === 'PHOTO') {
+        if (oldState !== 'EXPLODE') {
+            // Chuyển sang ảnh tiếp theo nếu không phải từ EXPLODE
+            selectedIndex = (selectedIndex + 1) % photoMeshes.length;
+        }
+        // Nếu từ EXPLODE sang PHOTO thì giữ nguyên selectedIndex đã chọn
     }
     
     currentIndex = (currentIndex + 1) % states.length;
